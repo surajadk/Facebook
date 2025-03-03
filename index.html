@@ -3,11 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Firebase Auth Example</title>
+  <title>Firebase Auth & Firestore Example</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #f4f4f4;
+      background: #f9f9f9;
+      margin: 0;
+      padding: 0;
     }
     .container {
       max-width: 400px;
@@ -16,6 +18,7 @@
       padding: 20px;
       border: 1px solid #ddd;
       border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
     input, button {
       width: 100%;
@@ -23,15 +26,26 @@
       margin: 10px 0;
       box-sizing: border-box;
     }
+    button {
+      cursor: pointer;
+      border: none;
+      background: #4285f4;
+      color: #fff;
+      font-size: 1em;
+    }
+    button:hover {
+      background: #357ae8;
+    }
     .error {
       color: red;
       font-size: 0.9em;
+      min-height: 1.2em;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h2>Login</h2>
+    <h2>Firebase Auth Example</h2>
     <form id="loginForm">
       <input type="email" id="email" placeholder="Email" required />
       <input type="password" id="password" placeholder="Password" required />
@@ -48,7 +62,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.0.2/firebase-firestore-compat.js"></script>
 
   <script>
-    // Firebase Initialization
+    // Firebase Configuration
     const firebaseConfig = {
       apiKey: "AIzaSyCBg6RQXIiC2BKE2HjzochEeiajc7fBnZA",
       authDomain: "bookswap-bac8b.firebaseapp.com",
@@ -59,6 +73,7 @@
       measurementId: "G-Q33CEMLPZ5"
     };
 
+    // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
@@ -74,21 +89,20 @@
     // Login Handler
     loginForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      errorMessage.textContent = '';
-
+      errorMessage.textContent = "";
       try {
         const email = emailInput.value;
         const password = passwordInput.value;
         const userCredential = await auth.signInWithEmailAndPassword(email, password);
-
-        // Use set() with merge to update or create the document
-        await db.collection('users').doc(userCredential.user.uid).set({
+        
+        // Use set() with merge:true to create or update the document
+        await db.collection("users").doc(userCredential.user.uid).set({
           lastLogin: firebase.firestore.FieldValue.serverTimestamp()
         }, { merge: true });
 
-        alert('Successfully logged in!');
-        // Optionally, redirect the user after login
-        // window.location.href = '/dashboard.html';
+        alert("Successfully logged in!");
+        // Optionally redirect the user:
+        // window.location.href = "dashboard.html";
       } catch (error) {
         showError(error.message);
       }
@@ -96,60 +110,58 @@
 
     // Create Account Handler
     createAccountBtn.addEventListener('click', async () => {
-      errorMessage.textContent = '';
-
+      errorMessage.textContent = "";
       try {
         const email = emailInput.value;
         const password = passwordInput.value;
-
         if (!email || !password) {
-          showError('Please fill in all fields');
+          showError("Please fill in all fields");
           return;
         }
-
         const userCredential = await auth.createUserWithEmailAndPassword(email, password);
 
-        // Save user data to Firestore
-        await db.collection('users').doc(userCredential.user.uid).set({
+        // Save new user data to Firestore
+        await db.collection("users").doc(userCredential.user.uid).set({
           email: email,
           createdAt: firebase.firestore.FieldValue.serverTimestamp(),
           lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
-          provider: 'email/password'
+          provider: "email/password"
         });
 
-        alert('Account created successfully!');
+        alert("Account created successfully!");
       } catch (error) {
         showError(error.message);
       }
     });
 
-    // Password Reset Handler
-    forgotPasswordBtn.addEventListener('click', async (e) => {
+    // Forgot Password Handler
+    forgotPasswordBtn.addEventListener("click", async (e) => {
       e.preventDefault();
-      const email = prompt('Please enter your email address:');
-      
+      const email = prompt("Please enter your email address:");
       if (email) {
         try {
           await auth.sendPasswordResetEmail(email);
-          alert('Password reset email sent!');
+          alert("Password reset email sent!");
         } catch (error) {
           showError(error.message);
         }
       }
     });
 
-    // Error Handling Function
+    // Error handling function
     function showError(message) {
       errorMessage.textContent = message;
-      setTimeout(() => errorMessage.textContent = '', 5000);
+      setTimeout(() => {
+        errorMessage.textContent = "";
+      }, 5000);
     }
 
     // Auth State Listener
     auth.onAuthStateChanged(user => {
       if (user) {
-        console.log('Authenticated user:', user.email);
+        console.log("Authenticated user:", user.email);
       } else {
-        console.log('No authenticated user');
+        console.log("No authenticated user");
       }
     });
   </script>
