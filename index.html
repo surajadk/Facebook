@@ -5,21 +5,28 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Firebase Auth Example</title>
   <style>
-    body { font-family: Arial, sans-serif; }
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+    }
     .container {
       max-width: 400px;
       margin: 50px auto;
+      background: #fff;
       padding: 20px;
       border: 1px solid #ddd;
       border-radius: 5px;
     }
     input, button {
       width: 100%;
-      padding: 8px;
-      margin: 8px 0;
+      padding: 10px;
+      margin: 10px 0;
       box-sizing: border-box;
     }
-    .error { color: red; }
+    .error {
+      color: red;
+      font-size: 0.9em;
+    }
   </style>
 </head>
 <body>
@@ -74,10 +81,10 @@
         const password = passwordInput.value;
         const userCredential = await auth.signInWithEmailAndPassword(email, password);
 
-        // Update last login time in Firestore
-        await db.collection('users').doc(userCredential.user.uid).update({
+        // Use set() with merge to update or create the document
+        await db.collection('users').doc(userCredential.user.uid).set({
           lastLogin: firebase.firestore.FieldValue.serverTimestamp()
-        });
+        }, { merge: true });
 
         alert('Successfully logged in!');
         // Optionally, redirect the user after login
@@ -90,6 +97,7 @@
     // Create Account Handler
     createAccountBtn.addEventListener('click', async () => {
       errorMessage.textContent = '';
+
       try {
         const email = emailInput.value;
         const password = passwordInput.value;
